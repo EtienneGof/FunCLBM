@@ -5,4 +5,4 @@ This repository contains the Scala / Spark source code that implements the time 
 
 ## Quick start
 
-The scala code must be built using maven using the file ./build.sh
+The build.sh script helps the user build the project using maven.
