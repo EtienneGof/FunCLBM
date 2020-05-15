@@ -1,9 +1,7 @@
-package FunCLBMSpark
-
 
 import FunCLBMSpark.DataGeneration._
 import FunCLBMSpark.{OutputResults, TSSInterface, Tools}
-import breeze.linalg.{DenseMatrix => BzDenseMatrix, DenseVector => BzDenseVector}
+import breeze.linalg.{DenseMatrix, DenseVector}
 import com.github.unsupervise.spark.tss.core.TSS
 import org.apache.spark.SparkConf
 import org.apache.spark.rdd.RDD
@@ -33,8 +31,8 @@ object Main {
   val tss: TSS = randomDataGeneration(prototypes, sigma, sizeClusterRow, sizeClusterCol, shuffled=false)
   val periodogram = TSSInterface.getPeriodograms(tss)
     .map(row => (row._1, (row._2, row._3)))
-  val dataRDDByRow: RDD[(Int, Array[BzDenseVector[Double]])] = periodogram.groupByKey.map(row => (row._1,
-    row._2.toList.sortBy(_._1).map(r => BzDenseVector(r._2.toArray)).toArray))
+  val dataRDDByRow: RDD[(Int, Array[DenseVector[Double]])] = periodogram.groupByKey.map(row => (row._1,
+    row._2.toList.sortBy(_._1).map(r => DenseVector(r._2.toArray)).toArray))
 
   val n: Int = sizeClusterRow.head.sum
   val p: Int = sizeClusterCol.sum
@@ -50,7 +48,7 @@ object Main {
 
     println("Generate a bunch of results ARI / ICL / Likelihood")
     var t0 = System.nanoTime()
-    (0 until 20).foreach(i => {
+    (0 until 1).foreach(i => {
       println(">>>>> " + i.toString)
 
       val latentBlock = new FunCLBMSpark.CondLatentBlock()
@@ -64,7 +62,7 @@ object Main {
       val colPartition = outputSEM("ColPartition").asInstanceOf[List[Int]]
       val estimatedBlockPartition = Tools.getBlockPartition(rowPartition, colPartition)
       val estimatedEntireRowPartition = Tools.getEntireRowPartition(rowPartition)
-      val scoresMat = BzDenseMatrix(Array(
+      val scoresMat = DenseMatrix(Array(
         adjustedRandIndex(trueEntireRowPartition, estimatedEntireRowPartition),
         adjustedRandIndex(trueColPartition.toArray, colPartition.toArray),
         adjustedRandIndex(trueBlockPartition, estimatedBlockPartition),
@@ -76,32 +74,3 @@ object Main {
     })
   }
 }
-
-
-
-
-
-//(0 until 27).map(i => {
-//      println(">>>>> "+i.toString)
-//      val tss: TSS = randomDataGeneration(prototypes, sigma, sizeClusterRow, sizeClusterCol, shuffled=false)
-//      val periodogram = TSSInterface.getPeriodograms(tss)
-//        .map(row => (row._1, (row._2, row._3)))
-//      val dataRDDByRow: RDD[(Int, Array[BzDenseVector[Double]])] = periodogram.groupByKey.map(row => (row._1,
-//        row._2.toList.sortBy(_._1).map(r => BzDenseVector(r._2.toArray)).toArray))
-//      val resGridSearch = ModelSelection.bestModelAfterFunLBMGridSearch(dataRDDByRow,
-//        rangeL=List(3),
-//        rangeK=List(2,3,4,5),
-//        verbose=true,
-//        nTryMaxPerConcurrent = 10)
-//      val model = resGridSearch("Model").asInstanceOf[CondLatentBlockModel]
-//      val rowProportion = resGridSearch("RowPartition").asInstanceOf[List[List[Double]]]
-//      val colProportion = resGridSearch("ColPartition").asInstanceOf[List[Double]]
-//      t0 = LBM.Tools.printTime(t0,"Model Selection ")
-//      val selectedModel = model.KVec.mkString(":")
-//      val selectedModelMat = DenseMatrix(Array(selectedModel)).reshape(1,1)
-//      println(selectedModel)
-//      println(selectedModelMat)
-//      LBM.OutputResults.writeMatrixStringToCsv("/home/etienne/IdeaProjects/renault/etienne/Coclustering/src/main/scala/FunCLBMSpark/experiments/FunLBMModelSelection.csv",
-//        selectedModelMat, append = true)
-//      selectedModel
-//    }).toArray
