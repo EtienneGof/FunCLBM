@@ -5,4 +5,4 @@ This repository contains the Scala / Spark source code that implements the time 
 
 ## Quick start
 
-The build.sh script helps the user build the project using maven, and run.sh launches a series of model inference on simulated dataset (with pre-parametred SEM-Gibbs)
+The build.sh script helps the user build the project using maven, and run.sh launches a series of model inference on simulated dataset (with SEM-Gibbs parameters pre-specified)
